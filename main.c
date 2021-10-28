@@ -13,16 +13,21 @@
 #include "sensors/proximity.h"
 #include "selector.h"
 #include "sensors/VL53L0X/VL53L0X.h"
-#include "chprintf.h"
-#include "usbcfg.h"
-#include "epuck1x/uart/e_uart_char.h"
-#include "stdio.h"
-#include "serial_comm.h"
+
+#define obj_true 450  // value if obstacle detected - to be measured
 
 // defining inter process communication bus
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
 CONDVAR_DECL(bus_condvar);
+
+int prox_cal[8]={0,0,0,0,0,0,0,0};
+int i=0;
+
+int obs_status;
+int obs_side;
+int obs_value_right;
+int obs_value_left;
 
 int main(void)
 {
@@ -31,12 +36,7 @@ int main(void)
     chSysInit();
     mpu_init();
 
-    // Initiating inter process communication bus
     messagebus_init(&bus, &bus_lock, &bus_condvar);
-
-    //clearing leds
-    clear_leds();
-    spi_comm_start();
 
     //initialising motors
     motors_init();
@@ -47,44 +47,58 @@ int main(void)
     // Calibrate proximity sensors
     calibrate_ir();
 
-    //initialising didtance sensor module
-    VL53L0X_start();
-
-    // initialising USB communication peripheral
-    usb_start();
-
-    //initialising Bluetooth module
-    serial_start();
-
-    // initialising variables
-    int prox0,prox1,prox6,prox7;
-    int prox_cal0,prox_cal1,prox_cal6,prox_cal7;
-    int prox_light0,prox_light1,prox_light6,prox_light7;
-    int dist;
-
     /* Infinite loop. */
     while (1)
     {
     	//waits 1 second
-        //chThdSleepMilliseconds(1000);
+        chThdSleepMilliseconds(250);
+    	obs_status=0;
+    	obs_side=0;
+    	obs_value_right=0;
+    	obs_value_left=0;
 
-       // if(get_selector() == 1)	// for proximity values
-       // {
-        	prox0 = get_prox(0);
-        	prox_cal0 = get_calibrated_prox(0);
-        	prox_light0 = get_ambient_light(0);
-        	dist = VL53L0X_get_dist_mm();
-        	printf("\n\n\n Prox 0 reading: &d",prox0);
-        	printf("\n Prox 0 calibrated reading: &d",prox_cal0);
-        	printf("\n Prox 0 light reading: &d",prox_light0);
-        	printf("\n Distance: %d mm",dist);
+    	for(i=0;i<8;++i)
+        	{ prox_cal[i]=get_calibrated_prox(i); }
 
-        	//int value = 10;
-        	char str[100];
-        	int str_length = sprintf(str, "Printing number %d!\n",prox0);
-        	e_send_uart1_char(str, str_length);
-        //}
-       // }
+       	//left_motor_set_speed(300);
+        //right_motor_set_speed(300);
+
+        for(i=0;i<=1;++i)
+        {
+            obs_value_right+=prox_cal[i];
+        	if((prox_cal[i]>obj_true)&&(obs_status==0))
+           		obs_status=1;
+        }
+        for(i=6;i<=7;++i)
+        {
+          obs_value_left+=prox_cal[i];
+          if((prox_cal[i]>obj_true)&&(obs_status==0))
+          	obs_status=1;
+        }
+        if (obs_status == 1)
+        {
+        	if(obs_value_right>=obs_value_left)
+           		obs_side = 1;
+           	else
+           		obs_side = -1;
+           	if(obs_side == 1)
+           	{
+           		left_motor_set_speed(-250);
+           		right_motor_set_speed(250);
+           		//chThdSleepMilliseconds(2500);
+           	}
+           	else
+           	{
+           		left_motor_set_speed(250);
+           		right_motor_set_speed(-250);
+           		//chThdSleepMilliseconds(2500);
+           	}
+        }
+        else
+        {
+          left_motor_set_speed(600);
+          right_motor_set_speed(600);
+        }
     }
 }
 
