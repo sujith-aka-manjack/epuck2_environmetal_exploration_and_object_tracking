@@ -1,6 +1,8 @@
 /* Code made by Sujith Kurian James for epuck lab Task 1
    cop20skj
-   Group 2 Team A */
+   Group 2 Team A 
+   
+   Logic to make an epuck2 robot explore an environment while avoiding any obstacles */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +20,7 @@
 #include "selector.h"
 #include "sensors/VL53L0X/VL53L0X.h"
 
-#define obj_true 550  // value if obstacle detected - to be measured
+#define obj_true 550  // value if obstacle detected
 #define wait 50		// duration for which to pause the data input
 
 // defining inter process communication bus
