@@ -1,6 +1,8 @@
 /* Code made by Sujith Kurian James for epuck lab Task 2
    cop20skj
-   Group 2 Team A */
+   Group 2 Team A 
+   Logic to make epuck2 robot follow an object while maintaining a constant distance with the
+   Uses both proximity sensor and IR distance sensor to detect object and IR sensor alone to maintain distance and uses IR distance sensor to detect object if its not detected by promixity sensors */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,7 +79,7 @@ int main(void)
         for(i=0;i<8;++i)
         {
         	prox_avg=0;
-        	for(j=0;j<50;++j)
+        	for(j=0;j<50;++j)		//Taking 50 measurements and taking average to reduce error
         	{
         		prox_avg = prox_avg+get_calibrated_prox(i);
         		//chThdSleepMilliseconds(1);
@@ -90,7 +92,7 @@ int main(void)
         		prox_loc = i;
         	}
         }
-        for(i=0;i<50;++i)
+        for(i=0;i<50;++i)		//Taking 50 measurements and taking average to reduce error
         {
         	dist_avg=dist_avg+VL53L0X_get_dist_mm();
         	//chThdSleepMilliseconds(1);
