@@ -76,7 +76,7 @@ int main(void)
     	prox_max = 0;
     	prox_avg = 0;
         //Getting the proximity sensor values
-        for(i=0;i<8;++i)
+        for(i=0;i<8;++i)		//Taking 50 measurements and taking average to reduce error
         {
         	prox_avg=0;
         	for(j=0;j<50;++j)
@@ -92,7 +92,7 @@ int main(void)
         		prox_loc = i;
         	}
         }
-        for(i=0;i<50;++i)
+        for(i=0;i<50;++i)		//Taking 50 measurements and taking average to reduce error
         {
         	dist_avg=dist_avg+VL53L0X_get_dist_mm();
         	//chThdSleepMilliseconds(1);
